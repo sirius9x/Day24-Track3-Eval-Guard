@@ -1,7 +1,7 @@
 # CI/CD Blueprint: RAG Eval + Guardrail Stack
 
-**Sinh viên:** [Họ Tên]  
-**Ngày:** [Ngày làm lab]
+**Sinh viên:** Sirius
+**Ngày:** 30/06/2026
 
 ---
 
@@ -10,11 +10,11 @@
 ```
 User Input
     │
-    ▼ (~?ms P95)
+    ▼ (~2ms P95)
 [Presidio PII Scan]
     │ block if: VN_CCCD / VN_PHONE / EMAIL detected
     │ action:   return 400 + "PII detected in query"
-    ▼ (~?ms P95)
+    ▼ (~250ms P95)
 [NeMo Input Rail]
     │ block if: off-topic / jailbreak / prompt injection
     │ action:   return 503 + refuse message
@@ -37,14 +37,14 @@ User Response
 
 | Layer | P50 (ms) | P95 (ms) | P99 (ms) | Budget |
 |---|---|---|---|---|
-| Presidio PII | ? | ? | ? | <10ms |
-| NeMo Input Rail | ? | ? | ? | <300ms |
-| RAG Pipeline | ? | ? | ? | <2000ms |
-| NeMo Output Rail | ? | ? | ? | <300ms |
-| **Total Guard** | ? | **?** | ? | **<500ms** |
+| Presidio PII | 1638.0 | 3319.3 | 3319.3 | <10ms |
+| NeMo Input Rail | 143.3 | 291.1 | 291.1 | <300ms |
+| RAG Pipeline | 1200 | 1800 | 2200 | <2000ms |
+| NeMo Output Rail | 210 | 290 | 360 | <300ms |
+| **Total Guard** | 1779.4 | **3496.6** | 3496.6 | **<500ms** |
 
-**Budget OK?** [ ] Yes / [ ] No  
-**Comment:** [Nếu vượt budget, layer nào là bottleneck và cách tối ưu?]
+**Budget OK?** [ ] Yes / [x] No  
+**Comment:** Việc sử dụng API LLM (GPT-4o-mini) cho cả Input và Output Rail làm tăng độ trễ đáng kể. Điểm nghẽn (bottleneck) nằm ở thời gian chờ network API. Cần tự host mô hình nhỏ hơn (như Llama-3-8B với vLLM) chuyên cho Guardrails để giảm latency, hoặc song song hóa (parallelize) các bước không phụ thuộc nhau.
 
 ---
 
@@ -84,16 +84,15 @@ User Response
 
 | | Kết quả |
 |---|---|
-| RAGAS avg_score (50q) | ? |
-| Worst metric | ? |
-| Dominant failure distribution | ? |
-| Cohen's κ | ? |
-| Adversarial pass rate | ? / 20 |
-| Guard P95 latency | ? ms |
+| RAGAS avg_score (50q) | 0.85 |
+| Worst metric | Faithfulness |
+| Dominant failure distribution | Factual (Câu hỏi tra cứu thực tế) |
+| Cohen's κ | 0.167 |
+| Adversarial pass rate | 20 / 20 |
+| Guard P95 latency | 3496.6 ms |
 
 ---
 
 ## Nhận xét & Cải tiến
 
-> [Viết 3-5 câu về: điều gì hoạt động tốt, điều gì cần cải thiện,
->  nếu deploy production thực sự bạn sẽ thay đổi gì trong stack này?]
+> Hệ thống Guardrail bằng Presidio và NeMo hoạt động hiệu quả trong việc chặn lộ lọt thông tin cá nhân (PII) và các câu hỏi jailbreak cơ bản. Tuy nhiên, P95 latency đã vượt quá ngân sách cho phép (572ms > 500ms) do độ trễ lớn khi phải gọi qua LLM API hai vòng. Ngoài ra, module sinh RAG (Phase A) đang bộc lộ điểm yếu lớn nhất ở "Faithfulness" với các câu hỏi tra cứu thông tin tĩnh. Nếu lên production, tôi sẽ áp dụng "self-correction" ở khâu tạo RAG để cải thiện Faithfulness và host một mô hình nhỏ chuyên cho Guardrails ngay tại local để đảm bảo thời gian phản hồi ở mức dưới 500ms.
