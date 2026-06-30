@@ -1,6 +1,7 @@
 # CI/CD Blueprint: RAG Eval + Guardrail Stack
 
-**Sinh viên:** Sirius
+**Sinh viên:** Đoàn Xuân Thạch
+**Mã số sinh viên:** 2A202600950
 **Ngày:** 30/06/2026
 
 ---

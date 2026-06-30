@@ -1,6 +1,7 @@
 # LLM Judge Bias Report — Phase B
 
-**Sinh viên:** Sirius
+**Sinh viên:** Đoàn Xuân Thạch
+**Mã số sinh viên:** 2A202600950
 **Ngày:** 30/06/2026
 **Judge model:** gpt-4o-mini
 
